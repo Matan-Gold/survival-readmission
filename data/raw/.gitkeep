@@ -1,0 +1,3 @@
+# Raw data directory (not committed to version control)
+# Place raw MIMIC-IV data files here (managed externally or with DVC)
+

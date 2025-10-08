@@ -1,0 +1,58 @@
+# Cursor Project Rules – Survival Readmission (MIMIC-IV)
+
+## Scope
+- This repository builds a survival analysis pipeline to predict 30-day readmission using MIMIC-IV Demo (prototype) and full MIMIC-IV (later).
+- Treat this as a professional DS workflow: reproducible, testable, and documented.
+
+## Structure
+- Use this layout: app/, models/, archived_experiments/, data/{raw,processed,sample}, results/{predictions,figures,metrics}, notebooks/, tests/, entry scripts (preprocess.py, train.py, predict.py, result.py).
+- Keep core logic in app/ modules (data_loader, feature_engineering, survival_models, evaluation, interpret, utils).
+- Notebooks are for exploration & reporting only; do not place critical logic exclusively in notebooks.
+
+## Data & Paths
+- Never commit large raw data files. Data should live outside the repo or be managed via DVC.
+- Code must not hard-code local absolute paths. Use environment variables (e.g., MIMIC_DEMO_DIR) or a small config.
+- Place only tiny toy CSVs under data/sample/ for CI/smoke tests.
+
+## Modeling & Evaluation
+- Baseline: Cox Proportional Hazards (with regularization).
+- Advanced: XGBoost Survival (Cox and AFT objectives).
+- Always handle right-censoring correctly.
+- Always compute and report: Harrell's C-index, time-dependent AUC, Integrated Brier Score, and calibration.
+- Provide interpretability: Cox hazard ratios, SHAP plots for boosted models, and KM curves by risk strata.
+
+## Code Style
+- Prefer small, single-purpose functions with docstrings and (where helpful) type hints.
+- No mutable global state; pass dependencies explicitly.
+- Return structured outputs (e.g., dict or dataclass) from key functions (metrics, predictions).
+- Put saved models in /models and produced artifacts under /results.
+
+## Testing & CI
+- Every new function in app/ should have a corresponding pytest in tests/.
+- CI should: install deps, run tests, and execute a smoke step (e.g., run result.py against data/sample).
+- Keep the smoke run fast; do not depend on full MIMIC data.
+
+## Documentation
+- README must reflect: problem framing, cohort definition, models, metrics, how to run, and limitations.
+- If cohort rules change, update docs and code comments in app/feature_engineering.py and notebooks/02_CohortDefinition.ipynb.
+
+## Communication
+- Use clear commit messages and small PRs.
+- Use descriptive branch names (e.g., feat-cohort, feat-xgb-aft, fix-eval-calibration).
+
+## Health / Clinical Data Constraints
+- Respect censorship (i.e. don't treat censored patients as events).
+- All code that defines event times or readmission logic must clearly document cohort rules, censoring, exclusions.
+- When generating feature transformations or modeling, prefer explainability (Cox PH coefficients, SHAP) before jumping to black-box.
+- Follow PhysioNet DUA and do not attempt re-identification.
+
+## Dependency / Environment
+- Pin dependencies (via requirements.txt).
+- Avoid optional imports in generated code without checking availability.
+- Generated code should assume a "clean environment" and should include import statements.
+
+## General Rules
+- Every commit should be small, self-contained, and describe one logical change.
+- Use descriptive branch names (e.g., feat-cohort-def, fix-data-loader, feat-xgb-aft).
+- Prefer readability over cleverness (don't write trick one-liners unless they improve clarity).
+- When adding a new file/function, Cursor should suggest a matching test in tests/.

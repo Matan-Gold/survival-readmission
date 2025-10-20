@@ -32,10 +32,16 @@ FILES_TO_DOWNLOAD = [
     "hosp/patients.csv.gz",
     "hosp/diagnoses_icd.csv.gz",
     "hosp/d_labitems.csv.gz",
+    "hosp/labevents.csv.gz",
 ]
 
 # Checksum file
 CHECKSUM_FILE = "SHA256SUMS.txt"
+
+# Console-safe symbols (avoid Unicode that breaks on some Windows consoles)
+OK = "[OK]"
+FAIL = "[FAIL]"
+WARN = "[WARN]"
 
 
 def compute_sha256(filepath: Path) -> str:
@@ -181,14 +187,14 @@ def main():
         with open(checksum_path, 'w') as f:
             f.write(checksum_content)
         
-        print(f"  ✓ Downloaded {CHECKSUM_FILE}")
+        print(f"  {OK} Downloaded {CHECKSUM_FILE}")
     except requests.exceptions.RequestException as e:
-        print(f"  ✗ Error downloading checksum file: {e}")
+        print(f"  {FAIL} Error downloading checksum file: {e}")
         sys.exit(1)
     
     # Parse checksums
     checksums = parse_checksum_file(checksum_content)
-    print(f"  ✓ Parsed {len(checksums)} checksums")
+    print(f"  {OK} Parsed {len(checksums)} checksums")
     print()
     
     # Step 2: Download data files
@@ -206,21 +212,21 @@ def main():
             if file_path in checksums:
                 print("    Checking existing file...", end='', flush=True)
                 if verify_checksum(dest_file, checksums[file_path]):
-                    print(" ✓ Checksum valid, skipping download")
+                    print(f" {OK} Checksum valid, skipping download")
                     download_results.append((file_path, True, "cached"))
                     continue
                 else:
-                    print(" ✗ Checksum mismatch, re-downloading")
+                    print(f" {FAIL} Checksum mismatch, re-downloading")
             else:
                 print("    No checksum available, re-downloading")
         
         # Download file
         if download_file(file_url, dest_file):
             download_results.append((file_path, True, "downloaded"))
-            print(f"    ✓ Downloaded successfully")
+            print(f"    {OK} Downloaded successfully")
         else:
             download_results.append((file_path, False, "failed"))
-            print(f"    ✗ Download failed")
+            print(f"    {FAIL} Download failed")
     
     print()
     
@@ -232,20 +238,20 @@ def main():
         dest_file = dest_dir / file_path
         
         if not dest_file.exists():
-            print(f"  ✗ {file_path} - File missing")
+            print(f"  {FAIL} {file_path} - File missing")
             verification_results.append((file_path, False))
             continue
         
         if file_path not in checksums:
-            print(f"  ⚠ {file_path} - No checksum available")
+            print(f"  {WARN} {file_path} - No checksum available")
             verification_results.append((file_path, True))  # Assume OK if no checksum
             continue
         
         if verify_checksum(dest_file, checksums[file_path]):
-            print(f"  ✓ {file_path} - Checksum valid")
+            print(f"  {OK} {file_path} - Checksum valid")
             verification_results.append((file_path, True))
         else:
-            print(f"  ✗ {file_path} - Checksum mismatch!")
+            print(f"  {FAIL} {file_path} - Checksum mismatch!")
             verification_results.append((file_path, False))
     
     print()
@@ -273,10 +279,10 @@ def main():
     print()
     
     if failed_download > 0 or failed_verify > 0:
-        print("⚠ Some files failed to download or verify. Please check errors above.")
+        print(f"{WARN} Some files failed to download or verify. Please check errors above.")
         sys.exit(1)
     else:
-        print("✓ All files downloaded and verified successfully!")
+        print(f"{OK} All files downloaded and verified successfully!")
         print()
         print(f"Data location: {dest_dir.absolute()}")
         print()

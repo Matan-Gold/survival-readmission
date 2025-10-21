@@ -54,11 +54,15 @@ def compute_td_auc(
     """
     (e_tr, t_tr) = y_train
     (e_te, t_te) = y_test
+    # Create structured arrays for scikit-survival
+    y_train_struct = np.array(list(zip(e_tr.astype(bool), t_tr)), dtype=[("event", bool), ("time", float)])
+    y_test_struct = np.array(list(zip(e_te.astype(bool), t_te)), dtype=[("event", bool), ("time", float)])
+    
     auc, mean_auc = cumulative_dynamic_auc(
-        y_train=np.array(list(zip(e_tr.astype(bool), t_tr)), dtype=[("event", bool), ("time", float)]),
-        y_test=np.array(list(zip(e_te.astype(bool), t_te)), dtype=[("event", bool), ("time", float)]),
-        estimate=np.asarray(risk_scores_test, dtype=float),
-        times=np.asarray(list(times), dtype=float),
+        y_train_struct,
+        y_test_struct,
+        np.asarray(risk_scores_test, dtype=float),
+        np.asarray(times, dtype=float),
     )
     return auc, mean_auc
 

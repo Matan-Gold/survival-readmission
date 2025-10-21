@@ -26,6 +26,9 @@ tqdm==4.65.0
 python-dotenv==1.0.0
 requests==2.31.0
 
+# Experiment tracking
+wandb>=0.16.0
+
 # Task automation
 invoke==2.2.0
 
